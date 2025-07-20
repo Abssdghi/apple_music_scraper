@@ -12,13 +12,19 @@ def room_scrape(link="https://music.apple.com/us/room/6748797380"):
     rspn = requests.get(link, headers=headers)
     sup = BeautifulSoup(rspn.text, "html.parser")
     items = sup.find('script',{"id":"serialized-server-data"})
-    our_json = json.loads(items.text)[0]
-
-    items = (our_json['data']['sections'][0]['items'])
-
+    our_json = json.loads(items.text)
+    sections = our_json[0]['data']['sections']
+    
+    for i in sections:
+        if "copper-track-swoosh" in i['id']:
+            items = i['items']
+            break
+        else:
+            items = []
+    
     for i in items:
-        song_url = i['tertiaryLinks'][0]['segue']['destination']['contentDescriptor']['url']
-        result.append(song_url)
+        song_url = i['playAction']['actionMetrics']['data'][0]['fields']['actionUrl']
+        result.append(convert_album_to_song_url(song_url))
     
     return result
 
