@@ -42,139 +42,142 @@ def playlist_scrape(link="https://music.apple.com/us/playlist/new-music-daily/pl
     return result
 
 def search(keyword="sasha sloan"):
-    result = {}
+    result = {
+        'artists':[],
+        'albums':[],
+        'songs':[],
+        'playlists':[],
+        'videos':[]
+    }
     link = "https://music.apple.com/us/search?term="+keyword
     
-    rspn = requests.get(link)
+    headers = {
+        "User-Agent": "Mozilla/5.0"
+    }
+    
+    rspn = requests.get(link, headers=headers)
     soup = BeautifulSoup(rspn.text, "html.parser")
     items = soup.find('script', {'id': 'serialized-server-data'})
     our_json = json.loads(items.text)
+    sections = our_json[0]['data']['sections']
     
-    index=0
-    for i in our_json[0]['data']['sections']:
+    for i in sections:
         if "artist" in i['id']:
-            artistindex = index
+            artists = i
         elif "album" in i['id']:
-            albumindex = index
+            albums = i
         elif "song" in i['id']:
-            songindex = index
+            songs = i
         elif "playlist" in i['id']:
-            playlistindex = index
+            playlists = i
         elif "music_video" in i['id']:
-            music_videoindex = index
-        index+=1
+            videos = i
 
     try:
-        artists = (our_json[0]['data']['sections'][artistindex]['items'])
         artists_result = []
         
-        for i in artists:
+        for i in artists['items']:
             artist = i['title']
-            try:
-                artwork = i['artwork']['dictionary']['url']
-                artwork = artwork.replace("{w}", f"{i['artwork']['dictionary']['width']}")
-                artwork = artwork.replace("{h}", f"{i['artwork']['dictionary']['height']}")
-                artwork = artwork.replace("{f}", f"jpg")
+            try:                
+                image_url = i['artwork']['dictionary']['url']
+                image_width = i['artwork']['dictionary']['width']
+                image_height = i[0]['artwork']['dictionary']['height']
+                artwork = get_cover(image_url, image_width, image_height)
             except:
-                artwork="https://upload.wikimedia.org/wikipedia/commons/thumb/6/65/No-Image-Placeholder.svg/330px-No-Image-Placeholder.svg.png"
+                artwork = ""
 
             url = i['contentDescriptor']['url']
             artists_result.append({'title':artist, 'url':url, 'image':artwork})
         result['artists'] = artists_result
         
-    except Exception as e:
-        print("musics/search/artists/error:\n"+str(e))
-        result['artists'] = [{'title':"not found", 'url':"", 'image':""}]
+    except:
+        pass
 
 
     try:
-        albums = (our_json[0]['data']['sections'][albumindex]['items'])
         albums_result = []
-        for i in albums:
+        
+        for i in albums['items']:
             song = i['titleLinks'][0]['title']
             artist = i['subtitleLinks'][0]['title']
             try:
-                artwork = i['artwork']['dictionary']['url']
-                artwork = artwork.replace("{w}", f"{i['artwork']['dictionary']['width']}")
-                artwork = artwork.replace("{h}", f"{i['artwork']['dictionary']['height']}")
-                artwork = artwork.replace("{f}", f"jpg")
+                image_url = i['artwork']['dictionary']['url']
+                image_width = i['artwork']['dictionary']['width']
+                image_height = i[0]['artwork']['dictionary']['height']
+                artwork = get_cover(image_url, image_width, image_height)
             except:
-                artwork="https://upload.wikimedia.org/wikipedia/commons/thumb/6/65/No-Image-Placeholder.svg/330px-No-Image-Placeholder.svg.png"
+                artwork = ""
 
             url = i['contentDescriptor']['url']
             albums_result.append({'title':song, 'artist':artist, 'url':url, 'image':artwork})
         result['albums'] = albums_result
         
-    except Exception as e:
-        print("musics/search/albums/error:\n"+str(e))
-        result['albums'] = [{'title':"not found", 'artist':"", 'url':"", 'image':""}]
+    except:
+        pass
 
 
     try:
-        songs = (our_json[0]['data']['sections'][songindex]['items'])
         songs_result = []
-        for i in songs:
+        
+        for i in songs['items']:
             song = i['title']
             artist = i['subtitleLinks'][0]['title']
             try:
-                artwork = i['artwork']['dictionary']['url']
-                artwork = artwork.replace("{w}", f"{i['artwork']['dictionary']['width']}")
-                artwork = artwork.replace("{h}", f"{i['artwork']['dictionary']['height']}")
-                artwork = artwork.replace("{f}", f"jpg")
+                image_url = i['artwork']['dictionary']['url']
+                image_width = i['artwork']['dictionary']['width']
+                image_height = i[0]['artwork']['dictionary']['height']
+                artwork = get_cover(image_url, image_width, image_height)
             except:
-                artwork="https://upload.wikimedia.org/wikipedia/commons/thumb/6/65/No-Image-Placeholder.svg/330px-No-Image-Placeholder.svg.png"
+                artwork = ""
 
             url = i['contentDescriptor']['url']
             songs_result.append({'title':song, 'artist':artist, 'url':url, 'image':artwork})
         result['songs'] = songs_result
-    except Exception as e:
-        print("musics/search/songs/error:\n"+str(e))
-        result['songs'] = [{'title':"not found", 'artist':"", 'url':"", 'image':""}]
+    except:
+        pass
 
 
 
     try:
-        playlists = (our_json[0]['data']['sections'][playlistindex]['items'])
         playlists_result = []
-        for i in playlists:
+        
+        for i in playlists['items']:
             song = i['titleLinks'][0]['title']
             artist = i['subtitleLinks'][0]['title']
             try:
-                artwork = i['artwork']['dictionary']['url']
-                artwork = artwork.replace("{w}", f"{i['artwork']['dictionary']['width']}")
-                artwork = artwork.replace("{h}", f"{i['artwork']['dictionary']['height']}")
-                artwork = artwork.replace("{f}", f"jpg")
+                image_url = i['artwork']['dictionary']['url']
+                image_width = i['artwork']['dictionary']['width']
+                image_height = i[0]['artwork']['dictionary']['height']
+                artwork = get_cover(image_url, image_width, image_height)
             except:
-                artwork="https://upload.wikimedia.org/wikipedia/commons/thumb/6/65/No-Image-Placeholder.svg/330px-No-Image-Placeholder.svg.png"
+                artwork = ""
 
             url = i['contentDescriptor']['url']
             playlists_result.append({'title':song, 'artist':artist, 'url':url, 'image':artwork})
         result['playlists'] = playlists_result
-    except Exception as e:
-        print("musics/search/playlists/error:\n"+str(e))
-        result['playlists'] = [{'title':"not found", 'artist':"", 'url':"", 'image':""}]
+    except:
+        pass
 
 
     try:
-        musicvideos = (our_json[0]['data']['sections'][music_videoindex]['items'])
-        musicvideos_results = []
-        for i in musicvideos:
+        videos_results = []
+        
+        for i in videos['items']:
             song = i['titleLinks'][0]['title']
             artist = i['subtitleLinks'][0]['title']
             try:
-                artwork = i['artwork']['dictionary']['url']
-                artwork = artwork.replace("{w}", f"{i['artwork']['dictionary']['width']}")
-                artwork = artwork.replace("{h}", f"{i['artwork']['dictionary']['height']}")
-                artwork = artwork.replace("{f}", f"jpg")
+                image_url = i['artwork']['dictionary']['url']
+                image_width = i['artwork']['dictionary']['width']
+                image_height = i[0]['artwork']['dictionary']['height']
+                artwork = get_cover(image_url, image_width, image_height)
             except:
-                artwork="https://upload.wikimedia.org/wikipedia/commons/thumb/6/65/No-Image-Placeholder.svg/330px-No-Image-Placeholder.svg.png"
+                artwork = ""
 
             url = i['contentDescriptor']['url']
-            musicvideos_results.append({'title':song, 'artist':artist, 'url':url, 'image':artwork})
-        result['musicvideos'] = musicvideos_results
-    except Exception as e:
-        print("musics/search/musicvideos/error:\n"+str(e))
-        result['musicvideos'] = [{'title':"not found", 'artist':"", 'url':"", 'image':""}]
+            videos_results.append({'title':song, 'artist':artist, 'url':url, 'image':artwork})
+        result['videos'] = videos_results
+    except:
+        pass
     
     return result
 
@@ -486,8 +489,6 @@ def artist_scrape(url="https://music.apple.com/us/artist/king-princess/134996853
         pass
 
     try:
-        # for i in singles['items']:
-        #     result['singles'].append((i['segue']['actionMetrics']['data'][0]['fields']['actionUrl']))
         result['singles_and_EP'] = get_all_singles(url)
     except:
         pass
